@@ -1,4 +1,5 @@
 node_modules/
 dist/
+Brainly/src/config.ts
 .env
 Data/
