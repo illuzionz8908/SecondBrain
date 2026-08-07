@@ -4,7 +4,7 @@ import { BACKEND_URL } from "../Data/BackEndUrl";
 
 
 export function useContent(){
-    const [contents,setContents] = useState([]);
+    const [contents, setContents] = useState([]);
 
     function refresh(){
         axios.get(BACKEND_URL + "/app/v1/content" , {
@@ -22,7 +22,7 @@ export function useContent(){
 
         let interval = setInterval(() => {
                     refresh()
-                },10 * 1000)
+                }, 10 * 1000)
 
         return () => {
             clearInterval(interval);
@@ -30,5 +30,5 @@ export function useContent(){
 
     },[])
 
-    return {contents,refresh};
+    return {contents, refresh};
 }

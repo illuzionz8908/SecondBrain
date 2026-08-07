@@ -60,7 +60,7 @@ export function Signup() {
         {/* Footer */}
         <p className="text-center text-gray-600 text-sm mt-6">
           Already have an account?{" "}
-          <a href="/" className="text-blue-600 hover:underline">
+          <a href="/signin" className="text-blue-600 hover:underline">
             Sign in
           </a>
         </p>

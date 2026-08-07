@@ -8,7 +8,13 @@ import { YoutubeIcon } from "../icons/YoutubeIcon";
 import { SideBaritem } from "./SideBarItem";
 
 
-export function Sidebar(){
+//to check for active tabs
+interface SideBarProps {
+    activeTab: String;
+    onTabChange: (tab : string) => void;
+}
+
+export function Sidebar({activeTab, onTabChange} : SideBarProps){
     return <div className="h-screen w-72 bg-white fixed border-r left-0 top-0 pl-6">
 
         <div className="flex text-2xl pt-4 items-center">
@@ -19,11 +25,42 @@ export function Sidebar(){
         </div>
 
         <div className="pt-7 pl-4">
-            <SideBaritem text="Twitter" icon={<TwitterIcon/>}/>
-            <SideBaritem text="Youtube" icon={<YoutubeIcon/>}/>
-            <SideBaritem text="Documents" icon={<DocumentIcon/>}/>
-            <SideBaritem text="Links" icon={<LinkIcon/>}/>
-            <SideBaritem text="Tags" icon={<TagIcon/>}/>
+
+            <SideBaritem 
+                text="All" 
+                icon={<LinkIcon size="lg"/>}
+                isActive = {activeTab == "All"}
+                onClick={() => onTabChange("all")}
+            />
+
+            <SideBaritem 
+                text="Twitter" 
+                icon={<TwitterIcon/>}
+                isActive = {activeTab == "twitter"}
+                onClick={() => onTabChange("twitter")}
+            />
+
+            <SideBaritem 
+                text="Youtube" 
+                icon={<YoutubeIcon/>}
+                isActive = {activeTab == "youtube"}
+                onClick={() => onTabChange("youtube")}
+            />
+
+            <SideBaritem 
+                text="Documents" 
+                icon={<DocumentIcon/>}
+                isActive = {activeTab == "documents"}
+                onClick={() => onTabChange("documents")}
+            />
+
+            <SideBaritem 
+                text="Tags" 
+                icon={<TagIcon size="lg"/>}
+                isActive = {activeTab == "tags"}
+                onClick={() => onTabChange("tags")}
+            />
+
         </div>
     </div>
 }
