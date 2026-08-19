@@ -3,3 +3,4 @@ dist/
 Brainly/src/config.ts
 .env
 Data/
+uploads/

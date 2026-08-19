@@ -65,16 +65,21 @@ export function Dashboard() {
         <div className='flex pt-4 gap-4 flex-wrap'>
 
             {filteredContents.length > 0 ? (
-              filteredContents.map(({title, type, link}) => (
+              filteredContents.map(({_id, title, type, link, filePath, fileName, fileSize, mimeType}) => (
                 <Card
+                  key={_id}
                   type={type}
                   title={title}
                   link={link}
+                  filePath={filePath}
+                  fileName={fileName}
+                  fileSize={fileSize}
+                  mimeType={mimeType}
                 />
               ))
             ) : (
               <p className='text-gray-500'>
-                No activetab Content saved yet
+                No {activeTab} Content saved yet
               </p>
             )}
 

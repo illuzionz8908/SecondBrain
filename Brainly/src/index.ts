@@ -5,10 +5,77 @@ import { JWT_SECRET } from "./config.js";
 import { userMiddleware } from "./middleware.js";
 import { random } from "./utils.js";
 import cors from "cors";
+import multer from "multer";
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
+import fs from "fs";
 
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+
+// ─── UPLOADS FOLDER SETUP ─────────────────────────────────────────────────────
+const UPLOADS_DIR = "uploads";
+
+// Create the uploads folder if it doesn't exist yet
+if (!fs.existsSync(UPLOADS_DIR)) {
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+    console.log("Created uploads directory");
+}
+
+// Serve files in /uploads folder as static files
+// e.g. http://localhost:3000/uploads/somefile.pdf
+app.use("/uploads", express.static(UPLOADS_DIR));
+
+
+// ─── MULTER CONFIGURATION ─────────────────────────────────────────────────────
+
+// Controls WHERE and WHAT NAME files get saved with
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, UPLOADS_DIR);              // save to /uploads folder
+    },
+    filename: (req, file, cb) => {
+        // uuid ensures no two files ever have same name
+        // path.extname gets the extension e.g ".pdf"
+        const uniqueName = `${uuidv4()}${path.extname(file.originalname)}`;
+        cb(null, uniqueName);               // e.g "a1b2c3d4-xxxx.pdf"
+    }
+});
+
+// Controls WHICH file types are accepted
+const fileFilter = (
+    req: express.Request,
+    file: Express.Multer.File,
+    cb: multer.FileFilterCallback
+) => {
+    const allowedMimeTypes = [
+        "application/pdf",                                                          // .pdf
+        "application/msword",                                                       // .doc
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  // .docx
+        "text/plain",                                                               // .txt
+        "application/vnd.ms-powerpoint",                                            // .ppt
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation" // .pptx
+    ];
+
+    if (allowedMimeTypes.includes(file.mimetype)) {
+        cb(null, true);     // accept file
+    } else {
+        cb(null, false);    // silently reject file
+    }
+};
+
+// Final multer instance with all config
+const upload = multer({
+    storage,
+    fileFilter,
+    limits: {
+        fileSize: 10 * 1024 * 1024    // 10MB max
+    }
+});
+
+
 
 app.post("/app/v1/signup", async (req,res) => {
     const email = req.body.email;
@@ -100,6 +167,70 @@ app.delete("/app/v1/content", userMiddleware, async (req,res) => {
         userId: req.userId
     })
 })
+
+
+// ─── UPLOAD DOCUMENT ──────────────────────────────────────────────────────────
+app.post(
+    "/app/v1/content/upload",
+    userMiddleware,
+    upload.single("document"),      // "document" must match FormData field name in frontend
+    async (req, res) => {
+
+        console.log("req.body →", req.body);
+        console.log("req.file →", req.file);
+
+        try {
+            // req.file is undefined if no file was sent OR fileFilter rejected it
+            if (!req.file) {
+                res.status(400).json({
+                    message: "No file uploaded. Check file type (PDF, DOC, DOCX, TXT, PPT, PPTX)"
+                });
+                return;
+            }
+
+            const { title } = req.body;
+
+            // Title is required
+            if (!title || !title.trim()) {
+                // Delete the already-saved file since we won't store it
+                fs.unlinkSync(req.file.path);
+                res.status(400).json({ message: "Title is required" });
+                return;
+            }
+
+            // Save document info to DB
+            const newContent = await ContentModel.create({
+                title: title.trim(),
+                type: "document",
+                filePath: req.file.path,            // "uploads/uuid.pdf"
+                fileName: req.file.originalname,    // "my-notes.pdf"
+                fileSize: req.file.size,            // 204800 (bytes)
+                mimeType: req.file.mimetype,        // "application/pdf"
+                //@ts-ignore
+                userId: req.userId,
+                tags: []
+            });
+
+            console.log("Document saved:", newContent._id);
+
+            res.json({
+                message: "Document uploaded successfully",
+                content: newContent
+            });
+
+        } catch (error) {
+            console.error("Upload error:", error);
+
+            // Clean up file from disk if DB save failed
+            if (req.file && fs.existsSync(req.file.path)) {
+                fs.unlinkSync(req.file.path);
+            }
+
+            res.status(500).json({ message: "Upload failed. Please try again." });
+        }
+    }
+);
+
 
 app.post("/app/v1/brain/share", userMiddleware, async (req,res) => {
     const share = req.body.share;

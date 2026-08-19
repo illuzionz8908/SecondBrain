@@ -29,7 +29,7 @@ export function Sidebar({activeTab, onTabChange} : SideBarProps){
             <SideBaritem 
                 text="All" 
                 icon={<LinkIcon size="lg"/>}
-                isActive = {activeTab == "All"}
+                isActive = {activeTab == "all"}
                 onClick={() => onTabChange("all")}
             />
 
@@ -50,8 +50,8 @@ export function Sidebar({activeTab, onTabChange} : SideBarProps){
             <SideBaritem 
                 text="Documents" 
                 icon={<DocumentIcon/>}
-                isActive = {activeTab == "documents"}
-                onClick={() => onTabChange("documents")}
+                isActive = {activeTab == "document"}
+                onClick={() => onTabChange("document")}
             />
 
             <SideBaritem 
