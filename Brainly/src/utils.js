@@ -1,6 +1,6 @@
 
 
-export function random(len: number){
+export function random(len){
     let options = "abcdefghijklmnopqrstuvwxyz1234567890";
     let length = options.length;
 

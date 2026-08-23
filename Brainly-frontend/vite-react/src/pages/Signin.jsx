@@ -6,8 +6,8 @@ import { BACKEND_URL } from "../Data/BackEndUrl";
 import { useNavigate } from "react-router-dom";
 
 export function Signin() {
-    const usernamerRef = useRef<any>();
-    const passowrdRef = useRef<any>();
+    const usernamerRef = useRef();
+    const passowrdRef = useRef();
     const navigate = useNavigate();
 
     async function signin(){
@@ -92,3 +92,4 @@ export function Signin() {
     </div>
   );
 }
+

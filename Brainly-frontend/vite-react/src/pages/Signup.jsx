@@ -6,9 +6,9 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 export function Signup() {
-    const emailRef = useRef<any>();
-    const usernameRef = useRef<any>();
-    const passwordRef = useRef<any>();
+    const emailRef = useRef();
+    const usernameRef = useRef();
+    const passwordRef = useRef();
     const navigate = useNavigate();
 
     async function signup(){
@@ -42,7 +42,7 @@ export function Signup() {
         {/* Form */}
         <div className="space-y-4 ">
           <Input reference={emailRef} placeholder="Enter Email" type="email" />
-          <Input reference={usernameRef} placeholder="Enter Username" type="string" />
+          <Input reference={usernameRef} placeholder="Enter Username" type="text" />
           <Input reference={passwordRef} placeholder="Enter Password" type="password" />
         </div>
 

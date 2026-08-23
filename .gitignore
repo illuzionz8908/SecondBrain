@@ -1,6 +1,6 @@
 node_modules/
 dist/
-Brainly/src/config.ts
+Brainly/src/config.js
 .env
 Data/
 uploads/
