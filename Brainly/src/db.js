@@ -31,7 +31,7 @@ const ContentSchema = new Schema({
 
     type: {
         type: String,
-        enum: ["youtube", "twitter", "document"],
+        enum: ["youtube", "twitter", "document", "linkedin"],
         required: true
     },
 

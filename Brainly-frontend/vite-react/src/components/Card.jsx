@@ -150,8 +150,11 @@
 import { YoutubeIcon } from "../icons/YoutubeIcon";
 import { TwitterIcon } from "../icons/TwitterIcon";
 import { DocumentIcon } from "../icons/DocumentIcon";
+import { LinkedInIcon } from "../icons/LinkedinIcon";
 import { ExternalLinkIcon } from "../icons/ExternalLinkIcon";
+import { TrashIcon } from "../icons/TrashIcon";
 import { BACKEND_URL } from "../Data/BackEndUrl";
+import axios from "axios";
 
 // Helper to get document icon based on file type
 function getDocIcon(mimeType) {
@@ -173,6 +176,7 @@ function formatFileSize(bytes) {
 }
 
 export function Card({
+  contentId,
   title,
   link,
   type,
@@ -180,7 +184,28 @@ export function Card({
   fileName,
   fileSize,
   mimeType,
+  onDelete,
 }) {
+  // ─── Delete Handler ─────────────────────────────────────────────────────────
+  async function handleDelete() {
+    if (!window.confirm(`Are you sure you want to delete "${title}"?`)) return;
+
+    try {
+      await axios.delete(`${BACKEND_URL}/app/v1/content`, {
+        headers: {
+          Authorization: localStorage.getItem("token"),
+        },
+        data: {
+          contentId: contentId,
+        },
+      });
+
+      if (onDelete) onDelete();
+    } catch (error) {
+      alert("Failed to delete content");
+    }
+  }
+
   const getEmbedLink = (url) => {
     if (!url) return "";
     if (url.includes("youtu.be/")) {
@@ -189,9 +214,25 @@ export function Card({
     return url.replace("watch?v=", "embed/");
   };
 
+  const getLinkedInEmbedLink = (url) => {
+    if (!url) return "";
+    if (url.includes("/embed/")) return url;
+
+    const activityMatch = url.match(/activity-([0-9]+)/);
+    if (activityMatch && activityMatch[1]) {
+      return `https://www.linkedin.com/embed/feed/update/urn:li:activity:${activityMatch[1]}`;
+    }
+
+    const urnMatch = url.match(/urn:li:(?:activity|share):([0-9]+)/);
+    if (urnMatch && urnMatch[1]) {
+      return `https://www.linkedin.com/embed/feed/update/urn:li:share:${urnMatch[1]}`;
+    }
+
+    return url;
+  };
+
   // ─── Document Card ──────────────────────────────────────────────────────────
   if (type === "document") {
-    // Convert backslashes to forward slashes for URL
     const fileUrl = `${BACKEND_URL}/${filePath?.replace(/\\/g, "/")}`;
 
     return (
@@ -201,7 +242,7 @@ export function Card({
                 transition-all duration-300 w-full max-w-[320px] min-h-[180px]"
       >
         {/* Header */}
-        <div className="flex justify-between items-start gap-4 mb-3">
+        <div className="flex justify-between items-start gap-2 mb-3">
           <div className="flex gap-2.5 items-center min-w-0">
             <div className="shrink-0">
               <div className="text-purple-500 bg-purple-50 p-1.5 rounded-lg">
@@ -226,22 +267,25 @@ export function Card({
             </div>
           </div>
 
-          {/* File size badge */}
-          {fileSize && (
-            <span
-              className="text-[10px] text-slate-400 bg-slate-50 
-                                         px-2 py-1 rounded-md flex-shrink-0 font-medium"
+          {/* Right Action Icons: File Size + Delete */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {fileSize && (
+              <span className="text-[10px] text-slate-400 bg-slate-50 px-2 py-1 rounded-md font-medium">
+                {formatFileSize(fileSize)}
+              </span>
+            )}
+            <button
+              onClick={handleDelete}
+              className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete Content"
             >
-              {formatFileSize(fileSize)}
-            </span>
-          )}
+              <TrashIcon />
+            </button>
+          </div>
         </div>
 
-        {/* Document Preview Area */}
-        <div
-          className="flex-1 flex items-center justify-center py-6 
-                                bg-slate-50 rounded-lg border border-slate-100 mb-4"
-        >
+        {/* Preview */}
+        <div className="flex-1 flex items-center justify-center py-6 bg-slate-50 rounded-lg border border-slate-100 mb-4">
           <div className="text-center">
             <span className="text-4xl">{getDocIcon(mimeType)}</span>
             <p className="text-xs text-slate-400 mt-2 font-medium">
@@ -250,15 +294,15 @@ export function Card({
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Buttons */}
         <div className="flex gap-2">
           <a
             href={fileUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3
-                                   bg-purple-50 text-purple-600 rounded-lg text-xs font-medium
-                                   hover:bg-purple-100 transition-colors duration-200"
+                       bg-purple-50 text-purple-600 rounded-lg text-xs font-medium
+                       hover:bg-purple-100 transition-colors duration-200"
           >
             <ExternalLinkIcon />
             View
@@ -267,8 +311,8 @@ export function Card({
             href={fileUrl}
             download={fileName}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3
-                                   bg-slate-50 text-slate-600 rounded-lg text-xs font-medium
-                                   hover:bg-slate-100 transition-colors duration-200"
+                       bg-slate-50 text-slate-600 rounded-lg text-xs font-medium
+                       hover:bg-slate-100 transition-colors duration-200"
           >
             ⬇️ Download
           </a>
@@ -277,7 +321,7 @@ export function Card({
     );
   }
 
-  // ─── YouTube / Twitter Cards ───────────────────────────────────────────────
+  // ─── YouTube / Twitter / LinkedIn Cards ───────────────────────────────────────
   return (
     <div
       className="group flex flex-col justify-between p-5 bg-white rounded-xl border border-slate-100 
@@ -285,16 +329,20 @@ export function Card({
             transition-all duration-300 w-full max-w-[320px] min-h-[180px]"
     >
       {/* Header */}
-      <div className="flex justify-between items-start gap-4 mb-3">
+      <div className="flex justify-between items-start gap-2 mb-3">
         <div className="flex gap-2.5 items-center min-w-0">
           <div className="shrink-0">
             {type === "youtube" ? (
               <div className="text-red-500 bg-red-50 p-1.5 rounded-lg">
                 <YoutubeIcon />
               </div>
-            ) : (
+            ) : type === "twitter" ? (
               <div className="text-sky-500 bg-sky-50 p-1.5 rounded-lg">
                 <TwitterIcon />
+              </div>
+            ) : (
+              <div className="text-blue-600 bg-blue-50 p-1.5 rounded-lg">
+                <LinkedInIcon />
               </div>
             )}
           </div>
@@ -306,18 +354,26 @@ export function Card({
           </h3>
         </div>
 
-        <a
-          href={link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="p-1.5 text-slate-400 hover:text-slate-600 
-                               hover:bg-slate-50 rounded-lg 
-                               opacity-0 group-hover:opacity-100 
-                               transition-all duration-200"
-          title="Open Source"
-        >
-          <ExternalLinkIcon />
-        </a>
+        {/* Action icons: External Link + Delete Button */}
+        <div className="flex items-center gap-1 shrink-0">
+          <a
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-all duration-200"
+            title="Open Source"
+          >
+            <ExternalLinkIcon />
+          </a>
+
+          <button
+            onClick={handleDelete}
+            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200"
+            title="Delete Content"
+          >
+            <TrashIcon />
+          </button>
+        </div>
       </div>
 
       {/* Content Preview */}
@@ -341,6 +397,17 @@ export function Card({
             <blockquote className="twitter-tweet w-full m-0 scale-95 origin-top">
               <a href={link}></a>
             </blockquote>
+          </div>
+        )}
+
+        {type === "linkedin" && link && (
+          <div className="h-[250px] w-full rounded-lg overflow-hidden border border-slate-100 bg-slate-50">
+            <iframe
+              className="w-full h-full"
+              src={getLinkedInEmbedLink(link)}
+              title="LinkedIn post"
+              frameBorder="0"
+            />
           </div>
         )}
       </div>

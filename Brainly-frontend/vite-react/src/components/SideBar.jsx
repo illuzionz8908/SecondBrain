@@ -1,5 +1,6 @@
 import { BrainIcon } from "../icons/BrainIcon";
 import { DocumentIcon } from "../icons/DocumentIcon";
+import { LinkedInIcon } from "../icons/LinkedinIcon";
 import { LinkIcon } from "../icons/LinkIcon";
 import { TagIcon } from "../icons/TagIcon";
 import { TwitterIcon } from "../icons/TwitterIcon";
@@ -36,6 +37,13 @@ export function Sidebar({ activeTab, onTabChange }) {
           icon={<YoutubeIcon />}
           isActive={activeTab === "youtube"}
           onClick={() => onTabChange("youtube")}
+        />
+
+        <SideBaritem
+          text="LinkedIn"
+          icon={<LinkedInIcon />}
+          isActive={activeTab === "linkedin"}
+          onClick={() => onTabChange("linkedin")}
         />
 
         <SideBaritem

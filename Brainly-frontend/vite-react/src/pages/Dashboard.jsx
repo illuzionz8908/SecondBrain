@@ -68,6 +68,7 @@ export function Dashboard() {
               filteredContents.map(({_id, title, type, link, filePath, fileName, fileSize, mimeType}) => (
                 <Card
                   key={_id}
+                  contentId={_id}
                   type={type}
                   title={title}
                   link={link}
@@ -75,6 +76,7 @@ export function Dashboard() {
                   fileName={fileName}
                   fileSize={fileSize}
                   mimeType={mimeType}
+                  onDelete={refresh}
                 />
               ))
             ) : (

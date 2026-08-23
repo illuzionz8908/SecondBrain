@@ -147,14 +147,27 @@ app.get("/app/v1/content", userMiddleware, async (req, res) => {
   });
 });
 
+
 app.delete("/app/v1/content", userMiddleware, async (req, res) => {
   const contentId = req.body.contentId;
 
-  await ContentModel.deleteMany({
-    contentId: contentId,
-    userId: req.userId,
-  });
+  try {
+    await ContentModel.deleteOne({
+      _id: contentId,
+      userId: req.userId,
+    });
+
+    res.json({
+      message: "Content deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to delete content",
+    });
+  }
+
 });
+
 
 // ─── UPLOAD DOCUMENT ──────────────────────────────────────────────────────────
 app.post(
