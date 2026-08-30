@@ -26,6 +26,8 @@ if (!fs.existsSync(UPLOADS_DIR)) {
 // Serve files in /uploads folder as static files
 app.use("/uploads", express.static(UPLOADS_DIR));
 
+
+
 // ─── MULTER CONFIGURATION ─────────────────────────────────────────────────────
 
 // Controls WHERE and WHAT NAME files get saved with
@@ -136,15 +138,38 @@ app.post("/app/v1/content", userMiddleware, async (req, res) => {
   });
 });
 
-app.get("/app/v1/content", userMiddleware, async (req, res) => {
-  const userId = req.userId;
-  const content = await ContentModel.find({
-    userId: userId,
-  }).populate("userId", "username");
+// app.get("/app/v1/content", userMiddleware, async (req, res) => {
+//   const userId = req.userId;
+//   const content = await ContentModel.find({
+//     userId: userId,
+//   }).populate("userId", "username");
 
-  res.json({
-    content,
-  });
+//   res.json({
+//     content,
+//   });
+// });
+
+
+app.get("/app/v1/content", userMiddleware, async (req, res) => {
+    const userId = req.userId;
+    const search = req.query.search || "";   // ← NEW: get search from query params
+
+    // Build filter object
+    const filter = { userId };
+
+    // If search query exists, search in title and fileName
+    if (search.trim()) {
+        filter.$or = [
+            { title: { $regex: search, $options: "i" } },       // case-insensitive
+            { fileName: { $regex: search, $options: "i" } }     // search doc names too
+        ];
+    }
+
+    const content = await ContentModel.find(filter)
+        .populate("userId", "username")
+        .sort({ createdAt: -1 });   // ← newest first
+
+    res.json({ content });
 });
 
 
@@ -160,7 +185,8 @@ app.delete("/app/v1/content", userMiddleware, async (req, res) => {
     res.json({
       message: "Content deleted successfully",
     });
-  } catch (error) {
+  } 
+  catch (error) {
     res.status(500).json({
       message: "Failed to delete content",
     });
